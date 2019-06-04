@@ -1,4 +1,7 @@
+package Streaming
+
 import java.sql._
+
 import org.apache.spark.sql.{ForeachWriter, Row}
 
 class  JDBCSink(url:String, user:String, pwd:String, driver:String) extends ForeachWriter[org.apache.spark.sql.Row] {

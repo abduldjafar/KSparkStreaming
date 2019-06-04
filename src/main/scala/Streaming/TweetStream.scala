@@ -1,11 +1,8 @@
-import java.util.regex.Pattern
+package Streaming
 
+import org.apache.spark.sql.SparkSession.builder
+import org.apache.spark.sql.functions.desc
 import org.apache.spark.sql.streaming.OutputMode
-import org.apache.spark.sql.ForeachWriter
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.SparkSession._
-import org.apache.spark.sql.{Column, DataFrame, Row}
-
 
 object TweetStream{
   def main(args: Array[String]): Unit = {
