@@ -1,16 +1,16 @@
 package Batch
+import Jdbc.Jdbc._
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.SparkSession.builder
 import org.apache.spark.sql.functions._
-
-
 object ReadJson {
+
   def main(args: Array[String]): Unit = {
     val spark = builder.master("local").appName("Batch Proces").getOrCreate
     val path = "/Users/abdulharisdjafar/Documents/code/datasets/netzme/data*"
     val peopleDF = spark.read.format("csv").option("inferSchema", "true").option("header","true").load(path)
 
-    peopleDF.select("{country_subdivision}","{revenue}","{event_name}","{last_session_time}")
+    val dffilterone = peopleDF.select("{country_subdivision}","{revenue}","{event_name}","{last_session_time}")
       .withColumnRenamed("{country_subdivision}","provinsi")
       .withColumnRenamed("{revenue}","revenue")
       .withColumnRenamed("{event_name}","event_name")
@@ -22,15 +22,8 @@ object ReadJson {
       .withColumn("month",month(new Column("last_session_time")))
       .groupBy("provinsi","year").pivot("month").sum("revenue")
       .na.fill(0)
-      .write
-      .format("jdbc")
-      .option("url", "jdbc:postgresql:postgres")
-      .option("dbtable", "test")
-      .option("user", "postgres")
-      .option("password", "toor")
-      .save()
 
-
-
+    val writedb = Writedb(dffilterone)
+    SavetoDB(writedb)
   }
 }

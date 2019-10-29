@@ -10,6 +10,6 @@ object BatchProc1{
     val mostviews = dfraw.filter("views > 100000")
       .sort(desc("views"))
       mostviews.printSchema()
-
+      
   }
 }
