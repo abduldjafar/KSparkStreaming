@@ -24,6 +24,6 @@ object ReadJson {
       .na.fill(0)
 
     val writedb = Writedb(dffilterone)
-    SavetoDB(writedb)
+    SavetoDB(writedb,"test")
   }
 }

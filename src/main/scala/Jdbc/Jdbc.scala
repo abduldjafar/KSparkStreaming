@@ -13,11 +13,10 @@ object Jdbc {
       }
     }
   }
-
-  def SavetoDB(dataFrameWriter: DataFrameWriter[Row]): Unit = {
+  def SavetoDB(dataFrameWriter: DataFrameWriter[Row],tbname: String): Unit = {
     dataFrameWriter.format("jdbc")
       .option("url", "jdbc:postgresql:postgres")
-      .option("dbtable", "test")
+      .option("dbtable", tbname)
       .option("user", "postgres")
       .option("password", "toor")
       .save()
