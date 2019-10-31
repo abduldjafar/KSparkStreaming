@@ -1,9 +1,13 @@
 package Batch
 
+import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.types.DoubleType
 
 object ZomatoProc {
+  Logger.getLogger("org").setLevel(Level.OFF)
+  Logger.getLogger("akka").setLevel(Level.OFF)
+
   def main(args: Array[String]): Unit = {
 
     // rata - rata harga makanan per 2 org dari zomato yang ratingnya > 4.5
