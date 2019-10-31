@@ -1,16 +1,14 @@
 package Batch
 import Jdbc.Jdbc.{SavetoDB, Writedb}
 import org.apache.spark.sql.Column
-import org.apache.spark.sql.SparkSession.builder
-import org.apache.spark.sql.types.{DecimalType, IntegerType}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.{DecimalType, IntegerType}
 
 
-object BatchProc1{
+object YoutubeVideosProc{
   def main(args: Array[String]): Unit = {
-    val spark = builder.master("local").appName("Batch Proces").getOrCreate
-    val dfraw = spark.read.format("csv").option("inferSchema", "true").option("header","true").load("USvideos.csv")
-      .na.drop()
+
+    val dfraw = SparkReader.Reader.csv("USvideos.csv")
 
     val writedb = Writedb(dfraw)
     SavetoDB(writedb,"usvideos")
@@ -26,7 +24,7 @@ object BatchProc1{
       .withColumn("percentage_nor",new Column("percentage_nor").cast(DecimalType(4,2)))
       .select("title","percentage_likes","percentage_dislikes","percentage_nor")
       .orderBy(desc("percentage_likes"))
-    SavetoDB(Writedb(likesvideos),"likesvideos")
+    //SavetoDB(Writedb(likesvideos),"likesvideos")
 
     //best channel base on likes
     val likechannels = dfraw.select("channel_title","likes")
@@ -34,7 +32,7 @@ object BatchProc1{
       .groupBy("channel_title").sum("likes")
       .orderBy(desc("sum(likes)"))
 
-    SavetoDB(Writedb(likechannels),"likechannels")
+    //SavetoDB(Writedb(likechannels),"likechannels")
 
     //pivoting channel and title likes
     val pivotchannel = dfraw.select("channel_title","title","likes","views")
@@ -43,10 +41,17 @@ object BatchProc1{
       .limit(100)
       .groupBy("channel_title").pivot("title").sum("likes")
       .na.fill(0)
+    //SavetoDB(Writedb(pivotchannel),"pivotchannel")
 
-    SavetoDB(Writedb(pivotchannel),"pivotchannel")
-    
-
+    /**
+    pivotchannel.write.format("csv")
+      .mode("overwrite")
+      .option("header", "true")
+      .option("delimiter", ",")
+      .option("quoteMode", "true")
+      .save("hdfs://datanode:9000/hadoop/dfs/data/hasil.csv")
+     **/
+    dfraw.show()
 
 
   }
