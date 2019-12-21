@@ -14,6 +14,16 @@ object Reader {
       .option("escape","\"")
       .load(filename)
   }
+
+  def csvI(filename: String): DataFrame = {
+    spark.read.format("csv")
+      .option("inferSchema", "true")
+      .option("header", "true")
+      .option("quote","\"")
+      .option("escape","\"")
+      .option("delimiter","|")
+      .load(filename)
+  }
   def json(path: String): DataFrame ={
     spark.read.json(path)
   }

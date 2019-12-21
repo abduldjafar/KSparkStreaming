@@ -17,4 +17,3 @@ libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.16"
 libraryDependencies += "org.apache.spark" %% "spark-mllib" % "2.4.4" % "runtime"
 // https://mvnrepository.com/artifact/org.postgresql/postgresql
 libraryDependencies += "org.postgresql" % "postgresql" % "9.4.1207.jre7"
-
