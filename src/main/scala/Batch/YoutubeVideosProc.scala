@@ -1,17 +1,20 @@
 package Batch
-import Jdbc.Jdbc.{SavetoDB, Writedb}
+import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{DecimalType, IntegerType}
 
 
 object YoutubeVideosProc{
+  Logger.getLogger("org").setLevel(Level.OFF)
+  Logger.getLogger("akka").setLevel(Level.OFF)
+
   def main(args: Array[String]): Unit = {
 
     val dfraw = SparkReader.Reader.csv("USvideos.csv")
-
-    val writedb = Writedb(dfraw)
-    SavetoDB(writedb,"usvideos")
+    val dfstopwords = SparkReader.Reader.csv("stopwords-en.txt")
+    val stopwords = dfstopwords.select("words").rdd.map(data => data(0)).collect().toList
+    dfraw.show()
 
     //best percentage for likes videos
     val likesvideos = dfraw.select("title","views","likes","dislikes")
@@ -24,15 +27,14 @@ object YoutubeVideosProc{
       .withColumn("percentage_nor",new Column("percentage_nor").cast(DecimalType(4,2)))
       .select("title","percentage_likes","percentage_dislikes","percentage_nor")
       .orderBy(desc("percentage_likes"))
-    //SavetoDB(Writedb(likesvideos),"likesvideos")
+
 
     //best channel base on likes
     val likechannels = dfraw.select("channel_title","likes")
       .withColumn("likes",new Column("likes").cast(IntegerType))
       .groupBy("channel_title").sum("likes")
       .orderBy(desc("sum(likes)"))
-
-    //SavetoDB(Writedb(likechannels),"likechannels")
+    likechannels.show()
 
     //pivoting channel and title likes
     val pivotchannel = dfraw.select("channel_title","title","likes","views")
@@ -41,6 +43,24 @@ object YoutubeVideosProc{
       .limit(100)
       .groupBy("channel_title").pivot("title").sum("likes")
       .na.fill(0)
+    pivotchannel.show()
+
+    // most category searching
+    dfraw.select("title","tags","likes","views")
+      .withColumn("percentage_likes",col("likes")/col("views"))
+      .orderBy(desc("percentage_likes")).limit(1000)
+      .select("tags").withColumn("words",Utils.regexp_extractAll(col("tags"),lit("\\w+"),lit(0)))
+      .select("words").withColumn("words",explode(col("words"))).filter(length(col("words")) > 1)
+      .groupBy("words").count().orderBy(desc("count"))
+      .withColumn("words",lower(col("words")))
+      .filter(!col("words").isin(stopwords:_*))
+      .show()
+
+    //save dataframe to DB
+    //val writedb = Writedb(dfraw)
+    //SavetoDB(writedb,"usvideos")
+    //SavetoDB(Writedb(likesvideos),"likesvideos")
+    //SavetoDB(Writedb(likechannels),"likechannels")
     //SavetoDB(Writedb(pivotchannel),"pivotchannel")
 
     /**
@@ -51,10 +71,6 @@ object YoutubeVideosProc{
       .option("quoteMode", "true")
       .save("hdfs://datanode:9000/hadoop/dfs/data/hasil.csv")
      **/
-    dfraw.show()
-
 
   }
-
-
 }
